@@ -1,0 +1,53 @@
+<div id="main-toolstrip" class="toolstrip-button">
+  <img src="images/sab2_16.png"/><span>sab</span> <span id="timeleft"></span>
+</div>
+<div id="prefs-toolstrip" class="toolstrip-button">
+  <img src="images/settings.png"/>
+</div>
+
+
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js" />
+<script type="text/javascript" src="common.js" />
+<script>
+setDefaults();
+
+$('document').ready(function() {
+    $('#main-toolstrip').click(function() {
+        window.open(getPref('sab_url'));
+        return false;
+    });
+    
+    $('#prefs-toolstrip').click(function() {
+        window.open(chrome.extension.getURL('settings.html'));
+        return false;
+    });
+});
+
+function setDefaults() {
+    if(!getPref('sab_url')) setPref('sab_url', 'http://localhost:8080/sabnzbd/');
+    if(!getPref('api_key')) setPref('api_key', '');
+    if(!getPref('sab_user')) setPref('sab_user', '');
+    if(!getPref('sab_pass')) setPref('sab_pass', '');
+}
+
+
+// Listen for notifications from the content script.
+chrome.extension.onConnect.addListener(function(port, name) {
+    port.onMessage.addListener(function(msg) {
+        if(msg.get) {
+            var value = getPref(msg.get);    
+            sendConfigResponse(msg.get, value);
+        }
+    });
+});
+
+
+function sendConfigResponse(key, value) {
+  chrome.tabs.getSelected(null, function(tab) {
+    var port = chrome.tabs.connect(tab.id, {name: "notifyChannelOut"});
+    port.postMessage({key: key, value: value});
+  });
+}
+
+
+</script>

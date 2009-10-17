@@ -1,0 +1,36 @@
+<label for="sab_url">SABnzbd URL</label><input class="extension-preference" type="text" id="sab_url" value="" />
+<label for="api_key">API KEY</label><input class="extension-preference" type="text" id="api_key" value="" />
+
+<br />
+
+<label for="sab_user">SABnzbd Username (Optional)</label><input class="extension-preference" type="text" id="sab_user" value="" />
+<label for="sab_pass">SABnzbd Password (Optional)</label><input class="extension-preference" type="password" id="sab_pass" value="" />
+(saves automatically)
+<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js" />
+<script type="text/javascript" src="common.js" />
+<script>
+var pollInterval = 1000 * 10;  // 10 seconds
+var requestTimeout = 1000 * 5;  // 5 seconds
+var unreadCount;
+
+$('document').ready(function() {
+    // Set the current preference value based off the id
+    $('.extension-preference').each(function() {
+        var id = $(this).attr('id');
+        $(this).val(getPref(id));
+        
+    });
+
+    // Record a change to the preference
+    $('.extension-preference').change(function() {
+        var id = $(this).attr('id');
+        var val = $(this).val();
+        setPref(id, val);
+    });
+});
+
+
+
+
+
+</script>
