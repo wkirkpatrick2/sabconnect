@@ -7,15 +7,19 @@ function findNZBId(elem) {
 }
 
 function addToSABnzbdFromIconClick() {
-    // Set the image to an in-progress image
-    var img = chrome.extension.getURL('images/sab2_16_fetching.png');
-    $(this).find('img').attr("src", img);
-    
+
     // Find the newzbin id from the href
     var nzbid = findNZBId(this);
-    var addLink = this;
-    
-    addToSABnzbd(addLink, nzbid, "addid");
+    if(nzbid) {
+        // Set the image to an in-progress image
+        var img = chrome.extension.getURL('images/sab2_16_fetching.png');
+        $(this).find('img').attr("src", img);
+        
+        var addLink = this;
+        
+        addToSABnzbd(addLink, nzbid, "addid");
+    }
+
     
     return false;
 
@@ -24,17 +28,20 @@ function addToSABnzbdFromIconClick() {
 function addToSABnzbdFromCheckbox(checkbox) {
 
     var link = $(checkbox).closest('tr').find('a[title="Send to SABnzbd"]');
-    var img = chrome.extension.getURL('images/sab2_16_fetching.png');
-    // Set the image to an in-progress image
-    $(link).find('img').attr("src", img);
-    // Uncheck the download
-    $(checkbox).attr('checked', '');
-    // Remove the styling that gets applied when a checkbox is checked
-    // For some reason they apply it to a multiple tbody elements
-    $(checkbox).closest('tbody').removeClass('select');
     // Find the nzb id from the links href
     var nzbid = findNZBId(link);
-    addToSABnzbd(link, nzbid, "addid");
+    if (nzbid) {
+        var img = chrome.extension.getURL('images/sab2_16_fetching.png');
+        // Set the image to an in-progress image
+        $(link).find('img').attr("src", img);
+        // Uncheck the download
+        $(checkbox).attr('checked', '');
+        // Remove the styling that gets applied when a checkbox is checked
+        // For some reason they apply it to a multiple tbody elements
+        $(checkbox).closest('tbody').removeClass('select');
+        
+        addToSABnzbd(link, nzbid, "addid");
+    }
 
 }
 
