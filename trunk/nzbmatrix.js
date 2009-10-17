@@ -9,15 +9,18 @@ function findNZBId(elem) {
 }
 
 function addToSABnzbdFromNZBMatrix() {
-    // Set the image to an in-progress image
-    var img = chrome.extension.getURL('images/sab2_16_fetching.png');
-    $(this).find('img').attr("src", img);
     
     // Find the newzbin id from the href
     var nzbid = findNZBId(this);
-    var addLink = this;
-    
-    addToSABnzbd(addLink, nzbid, "addurl");
+    if(nzbid) {
+        // Set the image to an in-progress image
+        var img = chrome.extension.getURL('images/sab2_16_fetching.png');
+        $(this).find('img').attr("src", img);
+        var addLink = this;
+        
+        addToSABnzbd(addLink, nzbid, "addurl");
+    }
+
     
     return false;
 
