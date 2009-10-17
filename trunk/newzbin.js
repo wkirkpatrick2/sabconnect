@@ -6,7 +6,7 @@ function findNZBId(elem) {
     
 }
 
-function addToSABnzbdFromNewzbin() {
+function addToSABnzbdFromIconClick() {
     // Set the image to an in-progress image
     var img = chrome.extension.getURL('images/sab2_16_fetching.png');
     $(this).find('img').attr("src", img);
@@ -21,6 +21,24 @@ function addToSABnzbdFromNewzbin() {
 
 }
 
+function addToSABnzbdFromCheckbox(checkbox) {
+
+    var link = $(checkbox).closest('tr').find('a[title="Send to SABnzbd"]');
+    var img = chrome.extension.getURL('images/sab2_16_fetching.png');
+    // Set the image to an in-progress image
+    $(link).find('img').attr("src", img);
+    // Uncheck the download
+    $(checkbox).attr('checked', '');
+    // Remove the styling that gets applied when a checkbox is checked
+    // For some reason they apply it to a multiple tbody elements
+    $(checkbox).closest('tbody').removeClass('select');
+    // Find the nzb id from the links href
+    var nzbid = findNZBId(link);
+    addToSABnzbd(link, nzbid, "addid");
+
+}
+
+// Add the SABnzbd download icon
 $('a[title="Download report NZB"]').each(function() {
     // Change the title to "Send to SABnzbd"
     $(this).attr("title", "Send to SABnzbd");
@@ -30,7 +48,15 @@ $('a[title="Download report NZB"]').each(function() {
     $(this).find('img').attr("src", img);
 
     // Change the on click handler to send to sabnzbd
-    $(this).click(addToSABnzbdFromNewzbin);
+    $(this).click(addToSABnzbdFromIconClick);
     
+});
+
+$('#topActionsForm table tr td:first').append('<button id="sendMultiple">Send to SABnzbd</button>');
+$('#sendMultiple').click(function() {
+    $('table.dataTabular input:checkbox:checked').each(function() {
+        addToSABnzbdFromCheckbox(this);
+    });
+    return false;
 });
 
