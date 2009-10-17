@@ -56,13 +56,13 @@ function addToSABnzbd(addLink, nzb, mode) {
         url: sabUrl + "api",
         data: data,
         success: function(data) {
-            var img = chrome.extension.getURL('sab2_16_green.png');
+            var img = chrome.extension.getURL('images/sab2_16_green.png');
             $(addLink).find('img').attr("src", img);
         },
         error: function() {
             // This seems to get called on a success message from sabnzbd.
             //var img = chrome.extension.getURL('sab2_16_red.png');
-            var img = chrome.extension.getURL('sab2_16_green.png');
+            var img = chrome.extension.getURL('images/sab2_16_green.png');
             $(addLink).find('img').attr("src", img);
         }
     });
