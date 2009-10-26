@@ -13,7 +13,7 @@ function addToSABnzbdFromTVNZB() {
 
 }
 
-$('a[href*="tvnzb.com\\/nzb\\/"]').each(function() {
+$('table a[href*="tvnzb.com\\/nzb\\/"]').each(function() {
     // Change the title to "Send to SABnzbd"
     var img = chrome.extension.getURL('/images/sab2_16.png');
     var href = $(this).attr('href');

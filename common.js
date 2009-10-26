@@ -24,7 +24,7 @@ sendMessage('sab_user');
 sendMessage('sab_pass');
 
 function checkEndSlash(input) {
-    if (input.charAt(input.length) == '/') {
+    if (input.charAt(input.length-1) == '/') {
         return input;
     } else {
         var output = input+'/';
@@ -32,15 +32,23 @@ function checkEndSlash(input) {
     }
 }
 
-function addToSABnzbd(addLink, nzb, mode) {
-
+function constructApiUrl() {
+    if (config.sab_url) {
+        var sabUrl = checkEndSlash(config.sab_url) + 'api';
+    } else {
+        var sabUrl = checkEndSlash(getPref('sab_url')) + 'api';
+    }
     
-    var sabUrl = checkEndSlash(config.sab_url);
+    return sabUrl;
+}
+
+function constructApiPost() {
+
     var apikey = config.api_key;
     var sabUser = config.sab_user;
     var sabPass = config.sab_pass;
-    
-    var data = { mode: mode, name: nzb };
+
+    var data = {};
     
     if (apikey) {
         data.apikey = apikey;
@@ -51,9 +59,19 @@ function addToSABnzbd(addLink, nzb, mode) {
         data.ma_password = sabPass;
     }
     
+    return data;
+}
+
+function addToSABnzbd(addLink, nzb, mode) {
+
+    var sabApiUrl = constructApiUrl();
+    var data = constructApiPost();
+    data.mode = mode;
+    data.name = nzb;
+    
     $.ajax({
         type: "GET",
-        url: sabUrl + "api",
+        url: sabApiUrl,
         data: data,
         success: function(data) {
             var img = chrome.extension.getURL('images/sab2_16_green.png');
