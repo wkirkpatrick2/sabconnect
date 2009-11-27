@@ -1,0 +1,20 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<script type="text/javascript" src="common.js"></script>
+<style type="text/css">
+	body{ overflow: hidden; margin: 0; padding: 4px; font-family: tahoma, sans-serif; width: 180px; }
+	.menu div{ background-color: white; color: black; font-size: 11px; padding: 4px 14px; white-space: nowrap; }
+	.menu div:hover{ background-color: #316AC5; color: white; cursor: default; }
+	.menu div span{ float: right; }
+</style>
+</head>
+<body>
+<div class="menu">
+    <div onclick="chrome.tabs.create({url: getPref('sab_url')})">Open SABnzbd</div>
+	<hr>
+	<div onclick="chrome.tabs.create({url: 'settings.html'})">Settings</div>
+</div>
+</body>
+</html>

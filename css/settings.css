@@ -13,7 +13,7 @@ body {
 }
 
 label {
-    width: 150px;
+    width: 250px;
     display: inline-block;
 }
 
@@ -32,7 +32,7 @@ h1 {
 }
 
 
-.serverDetails input[type=text],
-.serverDetails input[type=password]{
+#settings input[type=text],
+#settings input[type=password]{
     width:300px;
 }
