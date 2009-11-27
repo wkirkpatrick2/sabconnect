@@ -42,11 +42,18 @@ function constructApiUrl() {
     return sabUrl;
 }
 
-function constructApiPost() {
+// hasJsConfig = has local html javascript
+function constructApiPost(hasJsConfig) {
 
-    var apikey = config.api_key;
-    var sabUser = config.sab_user;
-    var sabPass = config.sab_pass;
+    if (hasJsConfig) {
+        var apikey = getPref('api_key');
+        var sabUser = getPref('sab_user');
+        var sabPass = getPref('sab_pass');
+    } else {
+        var apikey = config.api_key;
+        var sabUser = config.sab_user;
+        var sabPass = config.sab_pass;
+    }
 
     var data = {};
     
@@ -65,7 +72,7 @@ function constructApiPost() {
 function addToSABnzbd(addLink, nzb, mode) {
 
     var sabApiUrl = constructApiUrl();
-    var data = constructApiPost();
+    var data = constructApiPost(false);
     data.mode = mode;
     data.name = nzb;
     
