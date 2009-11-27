@@ -3,9 +3,14 @@
     "version": "0.3",
     "description": "SABnzbd extension for Google Chrome.",
     "background_page": "background.html",
-    "toolstrips": [
-    "sab_toolstrip.html"
-    ],
+    "browser_action": {
+        "default_icon": "images/sab2_16.png",
+        "default_title": "SABnzbd",
+      "popup": {
+         "height": 200,
+         "path": "popup.html"
+      }
+    },
     "content_scripts": [
         {
             "matches": [
@@ -14,7 +19,7 @@
                 "http://*.newzxxx.com/*",
                 "https://*.newzxxx.com/*"
             ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "newzbin.js"]
+            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/newzbin.js"]
         },
         {
             "matches": [
@@ -23,7 +28,7 @@
                 "https://*.tvnzb.com/",
                 "https://*.tvnzb.com/*"
             ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "tvnzb.js"]
+            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/tvnzb.js"]
         },
         {
             "matches": [
@@ -36,7 +41,7 @@
                 "https://*.nzbxxx.com/",
                 "https://*.nzbxxx.com/*"
             ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "nzbmatrix.js"]
+            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/nzbmatrix.js"]
         }
     ],
     "icons": { "16": "images/sab2_16.png",
