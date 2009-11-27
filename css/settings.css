@@ -30,3 +30,9 @@ h1 {
 .clear {
     clear: both;
 }
+
+
+.serverDetails input[type=text],
+.serverDetails input[type=password]{
+    width:300px;
+}
