@@ -45,14 +45,21 @@ function addToSABnzbdFromCheckbox(checkbox) {
 
 }
 
+// Add a common CSS for styling purposes
+var commonCss = chrome.extension.getURL('css/common.css');
+$('head').append('<link rel="stylesheet" href="' + commonCss + '" type="text/css" />');
+
 // Add the SABnzbd download icon
 $('a[title="Download report NZB"]').each(function() {
     // Change the title to "Send to SABnzbd"
-    $(this).attr("title", "Send to SABnzbd");
+    $(this).attr("title", "");
     
-    // Change the nzb download image
+    // Change the nzb download image to our own custom one
     var img = chrome.extension.getURL('images/sab2_16.png');
-    $(this).find('img').attr("src", img);
+    $(this).find('img')
+    .attr("src", img)
+    .attr("width", '16')
+    .attr("height",'16');
 
     // Change the on click handler to send to sabnzbd
     $(this).click(addToSABnzbdFromIconClick);
