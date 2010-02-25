@@ -55,6 +55,8 @@ function togglePause() {
                 var msg = 'Resume Queue';
             }
             $('#togglePause').html(msg);
+            
+            fetchInfo(true, reDrawPopup);
         },
         error: function() {
             $('#togglePause').html('failed - try again');
@@ -276,10 +278,11 @@ window.onload=func1;
     </div>
     
     <div class="float-fix"></div>
-    
+    <% if ( this.slot.percentage != "0" ) { %>
     <div class="progressBarContainer">
         <div class="progressBarInner" style="width:<%= this.slot.percentage %>%"></div>
     </div>
+    <% } %>
 
 </li>
 ]]>
