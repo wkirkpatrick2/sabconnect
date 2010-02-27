@@ -1,7 +1,7 @@
 function findNZBId(elem) {
     var url = $(elem).attr('href');
     
-    var splitstr = url.split(/browse\/post\/(\d+)\/nzb/g);
+    var splitstr = url.split(/browse\/post\/([^\/]+)/g);
     return splitstr[1];
     
 }
@@ -16,6 +16,7 @@ function addToSABnzbdFromIconClick() {
     // Find the newzbin id from the href
     var nzbid = findNZBId(this);
     if(nzbid) {
+    
         // Set the image to an in-progress image
         var img = chrome.extension.getURL('images/sab2_16_fetching.png');
         $(this).find('img').attr("src", img);
@@ -76,18 +77,36 @@ $('a[title="Download report NZB"]').each(function() {
     
 });
 
-$('#topActionsForm table tr td:first').append('<button id="sendMultiple">Send to SABnzbd</button>');
-$('#sendMultiple').click(function() {
+// Add a send to sabnzbd button to send multiple posts
+if(document.URL.indexOf('/post/') == -1) {
+    // Listing page
+    $('#topActionsForm table tr td:first').append('<button id="sendMultiple">Send to SABnzbd</button>');
+    $('#sendMultiple').click(function() {
 
-    if(!gConfig.enable_newzbin) {
-        // If disabled, skip the dl
-        return true;
-    }
+        if(!gConfig.enable_newzbin) {
+            // If disabled, skip the dl
+            return true;
+        }
 
-    $('table.dataTabular input:checkbox:checked').each(function() {
-        addToSABnzbdFromCheckbox(this);
+        $('table.dataTabular input:checkbox:checked').each(function() {
+            addToSABnzbdFromCheckbox(this);
+        });
+        return false;
     });
-    return false;
-});
+} else {
+    // Single post page
+    $('.main table.dataIrregular tr:first').after('<tr><th>SABnzbd:</th><td><a href="' + document.URL + '" id="addSABnzbdLink"><img id="addSABnzbdImg" src="" /></a></td></tr>');
+    // Change the nzb download image to our own custom one
+    var img = chrome.extension.getURL('images/sab2_16.png');
+    $('#addSABnzbdImg')
+    .attr("src", img)
+    .attr("width", '16')
+    .attr("height",'16');
+
+    // Change the on click handler to send to sabnzbd
+    $('#addSABnzbdLink').click(addToSABnzbdFromIconClick);
+}
+
+
 
 
