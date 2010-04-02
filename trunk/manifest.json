@@ -54,7 +54,8 @@
                 "https://*.nzbs.org/", 
                 "http://*.nzbs.org/*", 
                 "https://*.nzbs.org/*" 
-            ]
+            ],
+            "run_at": "document_end"
         }
     ],
     "icons": { "16": "images/sab2_16.png",
