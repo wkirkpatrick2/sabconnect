@@ -6,27 +6,19 @@ body {
     width: 230px;
 }
 
-.menu div {
-    background-color: white;
-    color: black;
-    font-size: 11px;
-    padding: 4px 14px;
-    white-space: nowrap;
-}
-
-.menu div:hover { 
-    background-color: #316AC5;
-    color: white;
-    cursor: pointer;
-}
-
-.menu div span {
-    float: right;
-}
 
 hr {
     margin: 2px 0;
 }
+
+#sabNoReport{
+	background:#E6AB70;
+	border:1px solid #C97E32;
+	padding:8px;
+	font-size:11px;
+}
+
+#daemons li{cursor:pointer;}
 
 #sabInfo { 
     color: black;

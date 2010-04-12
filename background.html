@@ -1,20 +1,26 @@
 <html>
 <head>
-<script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js" />
-<script type="text/javascript" src="common.js" />
+<!-- <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js" /> -->
+  <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+  <script type="text/javascript" src="jquery-ui-1.7.2.sortable.min.js"></script>
+  <script type="text/javascript" src="jquery.jqote.min.js"></script>
+  <script type="text/javascript" src="common.js"></script>
+  <script type="text/javascript" src="js/sabconnect.js"></script>
+
 <script>
 var gTimer;
 var gSabInfo;
 
+var img_g = chrome.extension.getURL('images/sab2_16_green.png');
+
+console.log('bg load');
 
 $(document).ready(function() {
     setDefaults();
     startTimer();
+    console.log('bg ready');
 });
 
-function restartTimer() {
-   startTimer(); 
-}
 
 function startTimer() {
     if(gTimer) {
@@ -28,20 +34,55 @@ function startTimer() {
 
 
 function setDefaults() {
-    if(!getPref('sab_url')) setPref('sab_url', 'http://localhost:8080/sabnzbd/');
-    if(!getPref('api_key')) setPref('api_key', '');
-    if(!getPref('speedlog')) setPref('speedlog', []);
-    if(!getPref('show_graph')) setPref('show_graph', 0);
-    if(!getPref('enable_newzbin')) setPref('enable_newzbin', 1);
-    if(!getPref('enable_tvnzb')) setPref('enable_tvnzb', 1);
-    if(!getPref('enable_nzbmatrix')) setPref('enable_nzbmatrix', 1);
-    
-    // Force this back to 0 just incase
-    getPref('skip_redraw', 0);
-    
-    if(!getPref('refresh_rate')) setPref('refresh_rate', 15);
+
+    // new user
+    if((getPref('sab_url') === undefined) && getPref('daemons') === undefined){
+
+    }else
+    // upgrading user
+    if (getPref('sab_url') === undefined){
+        setPref('refresh_rate', 15);
+        setPref('sab_url', 'http://localhost:8080/sabnzbd/');
+        setPref('api_key', '');
+        setPref('speedlog', []);
+
+        setPref('enable_messenger', 1);
+        setPref('show_graph', 0);
+        setPref('enable_newzbin', 1);
+        setPref('enable_tvnzb', 1);
+        setPref('enable_nzbmatrix', 1);
+    }
+
+    if(getPref('refresh_rate') === undefined) setPref('refresh_rate', 15);
+
+    if(getPref('daemons') === undefined ) {
+        if(! (getPref('sab_url') === undefined)){
+            daemons = [{label:'my sabnzbd+',url:getPref('sab_url'),apikey:getPref('api_key')}];
+        }else{
+            daemons = [{label:'localhost',url:'http://localhost:8080/sabnzbd/',apikey:''}];
+        }
+        setPref('daemons', daemons);
+        active_daemon = daemons[0];
+    }else{
+        var daemons = getPref('daemons');
+
+        if (daemons.length > 0){
+            active_daemon = daemons[0];
+        }
+    }
+
 }
 
+chrome.extension.onRequest.addListener(
+  function(request, sender, sendResponse) {
+    console.log(sender.tab ?
+                "from a content script:" + sender.tab.url :
+                "from the extension");
+    if (request.greeting == "hello")
+      sendResponse({farewell: "goodbye"});
+    else
+      sendResponse({}); // snub them.
+  });
 
 // Listen for notifications from the content script.
 chrome.extension.onConnect.addListener(function(port, name) {

@@ -6,7 +6,6 @@ function setPref(key, value) {
   config[key] = value;
   localStorage.config = JSON.stringify(config);
 }
-
 function getPref(key) {
   if (!localStorage.config) {
     return undefined;
@@ -14,147 +13,48 @@ function getPref(key) {
   var config = JSON.parse(localStorage.config);
   return config[key];
 }
+function fileSizes(value, decimals){
+    // Set the default decimals to 2
+    if(decimals == undefined)
+        decimals = 2;
+
+    kb = value / 1024
+    mb = value / 1048576
+    gb = value / 1073741824
+    if (gb >= 1){
+        return gb.toFixed(decimals)+"GB"
+    } else if (mb >= 1) {
+        return mb.toFixed(decimals)+"MB"
+    } else {
+        return kb.toFixed(decimals)+"KB"
+    }
+}       //file size formatter - takes an input in bytes
 
 var gConfig = new Object();
+var active_daemon;
+var last_queueinfo;
+
+try{
+  active_daemon = getPref('daemons')[0];
+}catch (e){
+  active_daemon = {label:'default.localhost',url:'localhost:8080/sabnzbd',apikey:''};
+}
+
+
 // Load the config objects into memory since we cannot access them directly in content scripts yet
+
+sendMessage('active_daemon');
+
+/*
 sendMessage('sab_url');
 sendMessage('api_key');
 sendMessage('sab_user');
 sendMessage('sab_pass');
+*/
 
 sendMessage('enable_newzbin');
 sendMessage('enable_tvnzb');
 sendMessage('enable_nzbmatrix');
-
-function checkEndSlash(input) {
-    if (input.charAt(input.length-1) == '/') {
-        return input;
-    } else {
-        var output = input+'/';
-        return output;
-    }
-}
-
-function constructApiUrl() {
-
-    if (gConfig.sab_url) {
-        var sabUrl = checkEndSlash(gConfig.sab_url) + 'api';
-    } else {
-        var sabUrl = checkEndSlash(getPref('sab_url')) + 'api';
-    }
-    
-    return sabUrl;
-}
-
-// hasJsConfig = has local html javascript
-function constructApiPost(hasJsConfig) {
-
-    if (hasJsConfig) {
-        var apikey = getPref('api_key');
-    } else {
-        var apikey = gConfig.api_key;
-    }
-
-    var data = {};
-    
-    if (apikey) {
-        data.apikey = apikey;
-    }
-    
-    return data;
-}
-
-function addToSABnzbd(addLink, nzb, mode) {
-
-    
-
-    // This is currently run by a content script
-    // Should change it to run in background.html
-    // The error function is always called - even on success, probably due to this
-
-    var sabApiUrl = constructApiUrl();
-    var data = constructApiPost(false);
-    data.mode = mode;
-    data.name = nzb;
-    
-    $.ajax({
-        type: "GET",
-        url: sabApiUrl,
-        dataType: 'json',
-        data: data,
-        success: function(data) {
-        
-            /*// If there was an error of some type, report it to the user and abort!
-            if(data.error) {
-                var img = chrome.extension.getURL('images/sab2_16_red.png');
-                $(addLink).find('img').attr("src", img);
-                alert(data.error);
-            }*/
-        
-            var img = chrome.extension.getURL('images/sab2_16_green.png');
-            $(addLink).find('img').attr("src", img);
-        },
-        error: function() {
-            // This seems to get called on a success message from sabnzbd.
-            //var img = chrome.extension.getURL('sab2_16_red.png');
-            var img = chrome.extension.getURL('images/sab2_16_green.png');
-            $(addLink).find('img').attr("src", img);
-            
-            //alert("Could not contact SABnzbd \n Check it is running and your settings are correct");
-        }
-    });
- 
-    
-}
-
-function moveQueueItem(nzoid, pos) {
-
-    var sabApiUrl = constructApiUrl();
-    var data = constructApiPost(true);
-    data.mode = 'switch';
-    data.value = nzoid;
-    data.value2 = pos;
-    
-
-    $.ajax({
-        type: "POST",
-        url: sabApiUrl,
-        data: data,
-        success: function(data) {
-            // Since data has changed, refresh the jobs. Does not update the graph because the first param is true
-            fetchInfo(true);
-        },
-        error: function() {
-            $('#error').html('Failed to move item, please check your connection to SABnzbd');
-        }
-    });
- 
-    
-}
-
-function queueItemAction(action, nzoid, callBack) {
-
-    var sabApiUrl = constructApiUrl();
-    var data = constructApiPost(true);
-    data.mode = 'queue';
-    data.name = action;
-    data.value = nzoid;    
-
-    $.ajax({
-        type: "POST",
-        url: sabApiUrl,
-        data: data,
-        success: function(data) {
-            // Since data has changed, refresh the jobs. Does not update the graph because the first param is true
-            fetchInfo(true, callBack);
-        },
-        error: function() {
-            $('#error').html('Failed to move item, please check your connection to SABnzbd');
-        }
-    });
- 
-    
-}
 
 
 
@@ -177,130 +77,93 @@ chrome.extension.onConnect.addListener(function(port, name) {
 
 
 
-//file size formatter - takes an input in bytes
-function fileSizes(value, decimals){
-    // Set the default decimals to 2
-    if(decimals == undefined) decimals = 2;
-    kb = value / 1024
-    mb = value / 1048576
-    gb = value / 1073741824
-    if (gb >= 1){
-        return gb.toFixed(decimals)+"GB"
-    } else if (mb >= 1) {
-        return mb.toFixed(decimals)+"MB"
-    } else {
-        return kb.toFixed(decimals)+"KB"
-    }
+
+var clearQueue = false;
+
+function clearInfo(){
+	if (clearQueue == true){return;}
+	clearQueue = true;
+	$('#sabInfo').html('');
 }
+
 
 /**
  * quickUpdate
  *     If set to true, will not update the graph ect, currently used when a queue item has been moved/deleted in order to refresh the queue list
  */
 function fetchInfo(quickUpdate, callBack) {
+	if (!quickUpdate || getPref('enable_messenger')){
+		return clearInfo();
+	}
+	
+	clearQueue = false;
 
-    var sabApiUrl = constructApiUrl();
-    var data = constructApiPost(true);
+  var data = {};
+  data.daemon = active_daemon;
+  data.opts   = {};
+  data.opts.limit = '5';
+  data.succes = function(data){
+    data = JSON.parse(data);
+    last_queueinfo = data;
+    updateUI();
     
-    data.mode = 'queue';
-    data.output = 'json';
-    data.limit = '5';
-    $.ajax({
-        type: "GET",
-        url: sabApiUrl,
-        data: data,
-        dataType: 'json',
-        success: function(data) {
+    /*
+      setPref('timeleft', data.queue.timeleft);
+      setPref('speed', speed);
+      setPref('sizeleft', queueSize);
+      setPref('queue', data.queue.slots);
+      setPref('status', data.queue.status);
+      setPref('paused', data.queue.paused);
 
-            // If there was an error of some type, report it to the user and abort!
-            if(data.error) {
-                setPref('error', data.error);
-                // We allow a custom callback to be passed (ie redrawing the popup html after update)
-                if(callBack) {
-                    callBack();
-                }
-                return;
-            }
-            // This will remove the error
-            // Will cause problems if the error pref is used elsewhere to report other errors
-            setPref('error', '');
+      if(data.queue.mbleft && data.queue.mbleft > 0) {
+            // Convert to bytes
+            var bytesLeft = data.queue.mbleft*1048576;
+            var queueSize = fileSizes(bytesLeft);
+          } else {
+            var queueSize = '';
+          }
 
-            // Cache the latest update (probably not needed)
-            //gSabInfo = data;
-            
-            setPref('timeleft', data.queue.timeleft);
-            
-            if(data.queue.speed) {
-                // Convert to bytes
-                var bytesPerSec = data.queue.kbpersec*1024;
-                //var speed = fileSizes(bytesPerSec, 0) + '/s';
-                var speed = data.queue.speed + 'B/s';
-            } else {
-                var speed = '-';
-            }
-            setPref('speed', speed);
-            
-            // Do not run this on a quickUpdate (unscheduled refresh)
-            if(!quickUpdate) {
-                var speedlog = getPref('speedlog');
-                
-                if(speedlog.length >= 10) {
-                    // Only allow 10 values, if at our limit, remove the first value (oldest)
-                    speedlog.shift()
-                }
-                
-                speedlog.push(data.queue.kbpersec);
-                setPref('speedlog', speedlog);
-            }
-            
-            
-            
-            if(data.queue.mbleft && data.queue.mbleft > 0) {
-                // Convert to bytes
-                var bytesLeft = data.queue.mbleft*1048576;
-                var queueSize = fileSizes(bytesLeft);
-            } else {
-                var queueSize = '';
-            }
-            setPref('sizeleft', queueSize);
+   */
+    /*
+    // Do not run this on a quickUpdate (unscheduled refresh)
+    if(!quickUpdate) {
+      var speedlog = getPref('speedlog');
 
-            setPref('queue', data.queue.slots);           
+      if(speedlog.length >= 10) {
+      // Only allow 10 values, if at our limit, remove the first value (oldest)
+      speedlog.shift()
+      }
 
-            setPref('status', data.queue.status);
-            setPref('paused', data.queue.paused);
-
-            // Update the badge
-            var badge = {};
-            // Set the text on the object to be the number of items in the queue
-            // +'' = converts the int to a string.
-            badge.text = data.queue.noofslots+'';
-            chrome.browserAction.setBadgeText(badge);
-            
-
-            // Update the background based on if we are downloading
-            if(data.queue.kbpersec && data.queue.kbpersec > 1) {
-                badgeColor = {}
-                badgeColor.color = new Array(0, 213, 7, 100);
-                chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-            } else {
-                // Not downloading
-                badgeColor = {}
-                badgeColor.color = new Array(255, 0, 0, 100);
-                chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-            }
-            
-            // We allow a custom callback to be passed (ie redrawing the popup html after update)
-            if(callBack) {
-                callBack();
-            }
-        },
-        error: function(XMLHttpRequest, textStatus, errorThrown) {
-            setPref('error', 'Could not connect to SABnzbd - Check it is running, the details in this plugin\'s settings are correct and that you are running at least SABnzbd version 0.5!');
-            // We allow a custom callback to be passed (ie redrawing the popup html after update)
-            if(callBack) {
-                callBack();
-            }
-        }
-    });
+      speedlog.push(data.queue.kbpersec);
+      setPref('speedlog', speedlog);
+    }
+    */
+  };
     
+  SABConnect.get_json(data);
+    
+}
+
+
+function updateUI(){
+  var data = last_queueinfo;
+
+  // Update the badge
+  var badge = {};
+  // Set the text on the object to be the number of items in the queue
+  // +'' = converts the int to a string.
+  badge.text = data.queue.noofslots+'';
+  chrome.browserAction.setBadgeText(badge);
+
+  // Update the background based on if we are downloading
+  if(data.queue.kbpersec && data.queue.kbpersec > 1) {
+      badgeColor = {}
+      badgeColor.color = new Array(0, 213, 7, 100);
+      chrome.browserAction.setBadgeBackgroundColor(badgeColor)
+  } else {
+      // Not downloading
+      badgeColor = {}
+      badgeColor.color = new Array(255, 0, 0, 100);
+      chrome.browserAction.setBadgeBackgroundColor(badgeColor)
+  }
 }
