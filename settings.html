@@ -1,0 +1,316 @@
+<link rel="stylesheet" type="text/css" href="css/settings.css" />
+
+<!-- <script type="text/javascript" src="http://ajax.googleapis.com/ajax/libs/jquery/1.3.2/jquery.js"></script> -->
+
+<!-- *************  already included in background ************** -->
+<script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.7.2.sortable.min.js"></script>
+<script type="text/javascript" src="jquery.jqote.min.js"></script>
+<script type="text/javascript" src="common.js"></script>
+<!--     ***************************************************    -->
+
+
+<!-- <script type="text/javascript" src="settings.js"></script> -->
+<script type="text/javascript" src="js/sabconnect.js"></script>
+
+<script type="text/javascript">
+  
+$('document').ready(function() {
+   
+   // test daemon ui on localhost
+   // $('#daemon').jqote({'daemon':{label:'test',url:'test',apikey:'test'}}).appendTo($('#daemons'));
+   
+   
+   /*###################################################################
+                             INIT PREFERENCES                        */
+   
+   // Set the current preference value based off the id
+   $('.extension-preference').each(function() {
+    var id = $(this).attr('id');
+    $(this).val(getPref(id));
+   });
+   
+   // Record a change to the preference
+   $('.extension-preference').change(function() {
+    var id = $(this).attr('id');
+    var val = $(this).val();
+    setPref(id, val);
+   });
+   
+   // Checkboxes need to be handled a little differently
+   $('.extension-preference-checkbox').each(function() {
+      var id = $(this).attr('id');
+      $(this).attr('checked', (getPref(id)) ? 'checked' : '');
+      $(this).parents('div.check').toggleClass('sel',getPref(id) == 1);
+   });
+   
+   // Record a change to the preference
+   $('.extension-preference-checkbox').change(function() {
+      var id = $(this).attr('id');
+      if($(this).attr('checked')) {
+          var val = 1;
+      } else {
+          var val = 0;
+      }
+      setPref(id, val);
+      $(this).parents('div.check').toggleClass('sel',getPref(id) == 1);
+   });
+   
+   /*                            INIT PREFERENCES
+   ###################################################################*/
+   
+   
+   
+   // random tooltips.... was bored
+   $('div.tip').each(function(){
+      $(this).prev().hover(function(){
+         $(this).next().show();
+      },function(){
+         $(this).next().hide();
+      });
+   });
+});
+
+   
+   
+
+
+
+
+/********************************************************************************
+                           DAEMON MANAGEMENT START                             */
+
+$('document').ready(function() {    
+	$("ul#daemons").sortable({ axis: 'y' });
+    $("ul#daemons").disableSelection();
+	
+    // load html for daemons in prefs
+    var daemons = getPref('daemons');
+    $.each(daemons, function(i, daemon) {
+      $('#new-daemon').jqote({'daemon':daemon}).appendTo($('#daemons'));
+    });
+    
+    // hook add button
+    $('#daemon-add').click(function(){
+      $('#new-daemon').jqote({'daemon':{label:'new daemon',url:'',apikey:''}}).appendTo($('#daemons')).children('.edit').show().children('input#label').focus();
+    });
+    
+    // hook save button
+    $('#daemon-save').click(function(){
+      saveDaemons();
+    });
+    
+    // hover box over daemon
+    $('li.daemon').live('mouseover',function(){
+      var o = $(this).offset();
+      var p = $('div.panel',this);
+      var x = o.left + $(this).width() -  p.width();
+      p.css({ left: x, top: o.top }).show();
+      
+    }).live('mouseout',function(){
+      $('div.panel',this).hide();
+    });
+    
+    
+    // functions for hover box (uses classname for images & function)
+    $('li.daemon img').live('click',function(){
+      var cls = $(this).attr('className');
+      var li  = $(this).parents('li.daemon');
+      switch(cls){
+        case 'd-del':
+          li.remove();
+          saveDaemons();
+          break;
+        case 'd-edit':
+          li.children('.edit').show();
+          break;
+        case 'd-conn':
+          //alert(  $('input#label', li).val()  );
+          var daemon = li2daemon(li);
+          console.log(daemon);
+          $('#conResponse')
+             .removeClass('checkError')
+             .removeClass('checkOk')
+             .html('<img class="loading"/> <span style="font-size:14px;color:#aaa;">'+daemon.label+'</span> <span style="font-size:10px;color:#aaa;">'+daemon.url+'</span><br>')
+             .show();
+          SABConnect.info({daemon:daemon,success:
+            function(data) {
+               $('#conResponse').append('SUCCESS').addClass('checkOk').children('img').remove();
+               return false;
+            },error:function(errMsg) {
+               $('#conResponse').append('ERROR: ' + errMsg).addClass('checkError').children('img').remove();
+               return false;
+            }
+          });
+          break;
+        default:
+          alert(cls);
+          break;
+      }
+    });
+    
+    // user confirmed, so save all
+    $('#daemon_confirm').live('click',function(){
+      var daemon = $(this).parents('li.daemon');
+      daemon.children('.edit').hide();
+      $('h3',daemon).html( li2daemon(daemon).label );
+      saveDaemons();
+    });
+}); // end doc.ready
+
+
+
+function saveDaemons(){
+  setPref('daemons',compileDaemons());
+}
+
+function compileDaemons(){
+  var daemons = [];
+  $('li.daemon').each(function(){
+    daemons.push(li2daemon(this));
+  });
+  return daemons;
+}
+
+function li2daemon(li){
+  var daemon = {};
+  daemon.label    = $('input#label', li).val();
+  daemon.url      = $('input#url',   li).val();
+  daemon.apikey   = $('input#apikey',li).val();
+  return daemon;
+}
+
+
+/*                          DAEMON MANAGEMENT END
+********************************************************************************/
+
+</script>
+
+
+
+
+
+
+<div id="page">
+    <div id="settings">
+        <input type="button" onclick="eatshit();"/>
+        <img id="logo" src="images/sab2_64.png" />
+        <h1>SABConnect Settings</h1> 
+        
+        <div class="clear"></div>
+        
+        <div class="debug"></div>
+        <hr />
+        <div class="clear"></div>
+        
+         <div class="message">Enter your settings for SABnzbd here. Note input fields are automatically saved, just click off or press enter.</div>
+        <br />
+        
+        
+      <div class='wrap' style='display:none;'>
+        <span class='title'>delete me =(</span>
+        <label for="sab_url">SABnzbd URL</label>
+        <input class="extension-preference" type="text" id="sab_url" value="" />
+        <div class="tip">The full URL you use to access SABnzbd.</div>
+        <br>
+        <label for="api_key">API KEY</label>
+        <input class="extension-preference" type="text" id="api_key" value="" />
+        <div class="tip">SABnzbd's API Key found in Config>General.</div>
+        <br>
+      </div>
+        
+        <div class='wrap'>
+          <span class='title'>SABnzbd+ Daemons</span>
+          <ul id="daemons">
+            
+          </ul>
+          <!-- <input type="button" id="daemon-save" value="Save My Daemons"> -->
+          <input type="button" id="daemon-add"  value="Add Daemon">
+          <br \>
+          <div id="conResponse"></div>
+        </div>
+        
+        <br /><br /><br />
+        
+        <div class='wrap'>
+          <span class='title'>Popup Settings</span>
+          <div class='check'>
+            <input class="extension-preference-checkbox" type="checkbox" id="enable_messenger" value="1" />
+            <label for="enable_messenger">Messenger Mode</label>
+            <div class="tip">Disables queue and graph, allows only sending of nzbs to SABnzbd+ daemons</div>
+          </div>
+          <div class='check'>
+            <input class="extension-preference-checkbox" type="checkbox" id="show_graph" value="1" />
+            <label for="show_graph">Enable Graph</label>
+            <div class="tip">Show Goog le Charts Graph in popup (experimental and requires reporting)</div>
+          </div>
+        </div>
+        
+        
+        
+        <div class="message info">Disabling the below will not disable the SABnzbd icon, just the functionality of sending to SABnzbd.
+        If you choose to disable one, remember the icon will still show.</div>
+        <br />
+        
+      <div class='wrap'>
+        <span class='title'>SABConnect: 1-Click</span>
+        
+        <div class='check'>
+        <input class="extension-preference-checkbox" type="checkbox" id="enable_newzbin" value="1" />
+        <label for="enable_newzbin">Newzbin.com</label><span class='req'>*</span>
+        <div class="tip">Meh..</div>
+      </div>
+      
+      <div class='check'>
+        <input class="extension-preference-checkbox" type="checkbox" id="enable_tvnzb" value="1" />
+        <label for="enable_tvnzb">TVNZB.com</label>
+      </div>
+      
+      <div class='check'>
+        <input class="extension-preference-checkbox" type="checkbox" id="enable_nzbmatrix" value="1" />   
+        <label for="enable_nzbmatrix">NZBMatrix.com</label><span class='req'>*</span>
+      </div>
+          
+      <br />
+      <span class='req'>* Payment required</span> 
+      </div>
+    </div>
+</div>
+
+
+<!-- hover menu for daemon items -->
+<script type="text/html" id="new-daemon">
+<![CDATA[
+<li class="daemon">
+  
+  <h3><%= this.daemon.label %></h3>
+  <div class='panel'>
+    <img class='d-edit' src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAH8SURBVDjLjZPfS1NhGMdXf0VEQhDUhdCN4X0IYT8ghIJQM0KoC4vushZddLELKyRhQQkSFIKEGEkUCI2oxVhepG5zi1xbc0u3cDs7Z+ec/ezT+x62scmmHvhwDrzP93Pe57znsQE2cR0SdAm6d+GwYL/M1LBVBV35fF4plUqVcrlMK8Q6TqdzYrukJuiW4Vwuh67rdbLZLJlMhmQyaUnigVlC05f4+dbB0tQplp92DsnwPimQBaZpUigUrLtE0zQURSGVSqHF37DhGkVZeQdagszKLJ7HvZtNAhmuIQWGYaCqKps/ZkivPqCwPs/Gp0cYvjnKUTe+F9fMJoFoo96zfJZ9K+sLpP33qRhujPANtr7dJPhqmO/PBxX3+PljTYLtqImPpH13qZge9LUrmLEB1FU7sZd9jJw5MljNthYk/KLnxdFqeAjzdz9Z/z3Ck2fRE36qx9pakAjME1y4Lbb9GTMyTD52GUXsZO3ZadTkL6umrSD4ZZrAezvLH54Q915EjwywtXSH8FQf+t+I9V12FLwe6wE1SmjyAi77Qb6Kt3rGe9H+hKzwrgLH9eMUPE4K3gm8jpPMjRwlHfNTLBbr7Cjo7znA2NVOXA/PsThzi2wyah1pI+0E/9rNQQsqMtM4CyfE36fLhb2ERa0mB7BR0CElexjnGnL0O2T2PyFunSz8jchwAAAAAElFTkSuQmCC" />
+    <img class='d-conn' src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAABGdBTUEAAK/INwWK6QAAABl0RVh0U29mdHdhcmUAQWRvYmUgSW1hZ2VSZWFkeXHJZTwAAAJ+SURBVBgZlcFLSBRhAAfw/858s860aygiptIp9NChoDzkxYNUYIcO0TUIOghFUNElvEad6lBkdEqCIugi3QQfLR2yQumBaPh+7Li7o/uanfmes1972IOEQv5+Ma01DuPRh+U+StlEhSsZUnElprXGQd6kdomUsoOJaiflojXk4mIM+pZjaXCp8GslTwkOMDLlOVyoCamiXhkpVCOJRDyGpG2CCYlsgSPvh4TgACGVt21L97Y0meBCg0kNyiW28wHiJrC8VYAo0wsE+3g1vtRdquYeHyXHUfAldkohKJcIuUSjbWI5XYKXLQ5/fnk1RbDHyJTnSKHeCbF6SbVMGCteH5pxAk7cQLbAQZmAGbOQccuQZTqGGoK615M5woX6aRPdZTkn4a+7kehMmdOzMmptaDOTNkEuzxE3gaAcQITMQ42BugpVHUzIrqRjwCJVOA3nzPLvMzKScujPxnK04RbRdIQgYBxhIYSs0DRqDNSFnHUKIUG5xKZXQTweg5Potmyde9hz/quZ9RbgukWsLWQQlvxFFQkXNQbqKgFvDRhHyCRCKrC27cOxYmhrPksyP5rQMzAPd3FJZVdzoyrip+cn7yvUENSVQnajvclCSAUqlIMyCa8oYVsmoPsxM/pJRVVxam7ywTz2IKi5+WLmXqNjXI4TA5lCgIRtwjI1GqwYhJBY39hFLt0+NPtxcB7/IIPPvt9N2MaTRNwAZQKWqbGeLmFnxwf1GZhPwXz+RXH2HPsgPuVP25qT0DrCZtbHpltEwQuGlRBjEedexFVaCenOjd9R2Acp+RQb2xFMaKS3iiju+v3Tb69N4T8RGtBjK/lSRoWKKsYGvr2/nsIh/AUG0IfiieuuUQAAAABJRU5ErkJggg==" />
+    <span class='clr'></span>
+    <img class='d-del'  src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABAAAAAQCAYAAAAf8/9hAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAA19JREFUeNpUk21sU2UUx//3tmNb23Vruw3q1hLCyLZuYiZkIQyIjIAfjAoJGGRZVIiaETAmus0BRoO8dJuCOLCBmEg0+8AHwksgSkREqiYODAS7dl1G5ka32d2u3b3tbXtfeq/PvUwYT/LLyXnuef7nOc89h1JVFdmfz+L/datlr52YdwiNhBUEA+GvOXzr+vsYzFvUfIGbLXuP5llMHzmbm2BduhiWJW5QNIXk6EOkCBPX/ZC4VO8L/X0dTwlkfvoWv7S+12dfXrvH8+4OUPExKCwDhYvpQXSRA7S1FChbgqGz58EM3POt//6r3Y8Friy0Hip9vn6/Z8cmiPdvgp1MYGqQAR/PQvtuthdiUW0pSiptyH92HcLnbyH6593e5u+Od1AXy4sq8symSOOHrZBDvyESiGIiGPtVq5dwg1BNyvAv21APW4ms3yivbi1unzgHIcFW0jkVbRUbmiAM/gFmLIHxwdhlsrdt/TefnyO2WqFof83O12Ff5oLAS2CjPLJ//w5n00poZ405UC9ZLIAU5zE5mgbxfRvPdDPXdrWvoWiDv/6t12DBDFLDYQzfmYYKCp5VRhSVGbXYLbSswkOlY5BFGbNMCsS/8cPbnWtyJHPtG9tgyk0jOTyI4EAUs/GMl5vNQMpKADulxVbRREXMTDOQBFlT1GhUSGZP61YUiv+CGwoidHcG7Kzg3XjycJesQJTIyWw8rscTAYzwnACZqJpdTig07a9r2YLC9AS4YABDgQRYVvBu+vJg19U9B5pNzoULFJIswwpEAONaCVcTSeglOJ+rRt32zShIRsCGAgiHk2A50fviF592KTlFu3Kbe3UDKUFAIqlq/o/UaUdJRX5hfqTGbYC5qkb/TamREB5EJPC87CXuJ3Nt/aa7sWFXpUNFenQYwTEZYkas0xvJ57D12KzG9sXlBl2AlwyI5azgojGoiooS1zNwrVwOe5EBCf81PGRymGHlEy93739fFxg/3YvL+458bTNTbS6HAaZKN4pXrMaCMifpYxri9BT4cABc6D4m4gpmUorvlSP7nrTymK9bz3zpQHdPnoFqLzWrKC4A8o2PBkYkr8VmgFiagiirx1491PnBU8P0zynv4/G8+HGPm5g2wlZC1dz2KOGC1t6bP+sYmT/O/wkwANyfmd/XQmH9AAAAAElFTkSuQmCC" />
+  </div>
+  <div class='edit'>
+    <label>Label</label>
+    <input type="text" id="label"   value="<%= this.daemon.label %>">
+    <br />
+    <label>URL</label>
+    <input type="text" id="url"     value="<%= this.daemon.url %>">
+    <br />
+    <label>API KEY</label>
+    <input type="text" id="apikey"  value="<%= this.daemon.apikey %>">
+    <br />
+    <label class='empty'></label>
+    <input type="button" id="daemon_confirm" value ="Save Changes" />
+  </div>
+</li>
+]]>
+</script>
+
+<!-- this is unused for now ... -->
+<script type="text/html" id="daemon_test">
+<![CDATA[
+  <div><b>Connecting <%= this.daemon.label %></b></div>
+  <span style='font-size:8px;color:#aaa;'><%= this.daemon.url %> [<%= this.daemon.apikey %>]</span>
+]]>
+</script>
