@@ -44,14 +44,6 @@ try{
 // Load the config objects into memory since we cannot access them directly in content scripts yet
 
 sendMessage('active_daemon');
-
-/*
-sendMessage('sab_url');
-sendMessage('api_key');
-sendMessage('sab_user');
-sendMessage('sab_pass');
-*/
-
 sendMessage('enable_newzbin');
 sendMessage('enable_tvnzb');
 sendMessage('enable_nzbmatrix');
@@ -87,27 +79,8 @@ function clearInfo(){
 }
 
 
-/**
- * quickUpdate
- *     If set to true, will not update the graph ect, currently used when a queue item has been moved/deleted in order to refresh the queue list
- */
-function fetchInfo(quickUpdate, callBack) {
-	if (!quickUpdate || getPref('enable_messenger')){
-		return clearInfo();
-	}
-	
-	clearQueue = false;
 
-  var data = {};
-  data.daemon = active_daemon;
-  data.opts   = {};
-  data.opts.limit = '5';
-  data.succes = function(data){
-    data = JSON.parse(data);
-    last_queueinfo = data;
-    updateUI();
-    
-    /*
+/*
       setPref('timeleft', data.queue.timeleft);
       setPref('speed', speed);
       setPref('sizeleft', queueSize);
@@ -138,32 +111,3 @@ function fetchInfo(quickUpdate, callBack) {
       setPref('speedlog', speedlog);
     }
     */
-  };
-    
-  SABConnect.get_json(data);
-    
-}
-
-
-function updateUI(){
-  var data = last_queueinfo;
-
-  // Update the badge
-  var badge = {};
-  // Set the text on the object to be the number of items in the queue
-  // +'' = converts the int to a string.
-  badge.text = data.queue.noofslots+'';
-  chrome.browserAction.setBadgeText(badge);
-
-  // Update the background based on if we are downloading
-  if(data.queue.kbpersec && data.queue.kbpersec > 1) {
-      badgeColor = {}
-      badgeColor.color = new Array(0, 213, 7, 100);
-      chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-  } else {
-      // Not downloading
-      badgeColor = {}
-      badgeColor.color = new Array(255, 0, 0, 100);
-      chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-  }
-}

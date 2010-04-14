@@ -14,6 +14,15 @@ var SABConnect = {
       var success = data.success;
       var error   = data.error;
 
+      if (!(typeof success == 'function')){
+        success = function(){};
+      }
+
+      if (!(typeof error == 'function')){
+        error = function(){};
+      }
+
+      
       if (opts === undefined){opts = {};}
 
       var url = SABConnect.daemon_url(daemon);
@@ -44,7 +53,7 @@ var SABConnect = {
           if (isError){
             error(errMsg);
           }else{
-            success();
+            success(data);
           }
         },
         error: error
@@ -52,14 +61,14 @@ var SABConnect = {
     },
 
   queue_json:function(data){
-      if (opts === undefined){opts = {};}
+      if (data.opts === undefined){data.opts = {};}
       data.opts.mode   = 'queue';
       data.opts.output = 'json';
       this.info(data);
   },
 
   queue_xml:function(data){
-      if (opts === undefined){opts = {};}
+      if (data.opts === undefined){data.opts = {};}
       data.opts.mode   = 'queue';
       data.opts.output = 'xml';
       this.info(data);
