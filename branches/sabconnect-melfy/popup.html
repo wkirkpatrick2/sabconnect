@@ -3,14 +3,15 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
 <link rel="stylesheet" type="text/css" href="css/popup.css" />
-<!--
+
 <script type="text/javascript" src="jquery-1.3.2.min.js"></script>
 <script type="text/javascript" src="jquery.jqote.min.js"></script>
 <script type="text/javascript" src="jquery-ui-1.7.2.sortable.min.js"></script>
 <script type="text/javascript" src="jgcharts.pack.js"></script>
 <script type="text/javascript" src="common.js"></script>
--->
+
 <script type="text/javascript" src="js/sabconnect.js"></script>
+
 
 <style>
     #active {font-size:18px; font-weight:bold;}
@@ -28,15 +29,21 @@ var active_daemon = bg.active_daemon;
 $(document).ready(function(){
     $('#active').html(active_daemon.label);
 
-    $('#controls img').live('click',function(){
+    $('#toolbar img').live('click',function(){
         switch($(this).attr('id')){
             case 'web':     chrome.tabs.create({url:SABConnect.daemon_url(active_daemon)}); break;
-            case 'gear':    chrome.tabs.create({url: 'settings.html'}); break;
+            case 'gear':    chrome.tabs.create({url:chrome.extension.getURL('settings.html')}); break;
             case 'toggle':  break;  
             default:
         }
     });
 
+//    <span id="sab-status"></span><br />
+
+    console.log(bg.last_queueinfo);
+    reDrawPopup();
+    
+    /*
     SABConnect.info({daemon:active_daemon,success:
         function(data) {
             $('#active').css({color:'green'});
@@ -44,6 +51,7 @@ $(document).ready(function(){
             $('#active').css({color:'red'});
         }
     });
+    */
 });
 
 
@@ -100,12 +108,6 @@ function getSortItemPos(id) {
 }
 
 function reDrawPopup() {
-	if(getPref('enable_messenger')){
-		$('#sabInfo').html('<div id="sabNoReport">Messenger Mode Enabled</div>');
-		$('#togglePause').hide();
-		return;
-	}
-	
 	$('#togglePause').show();
 	
     // If we do not want to redraw (such as in the middle of a drag and drop event, then skip
@@ -130,30 +132,37 @@ function reDrawPopup() {
     // Make sure the current queue is clear
     $('ul#sab-queue').html('');
 
-    paused = getPref('paused');
+
+    var data = bg.last_queueinfo;
+    console.log('reDrawPopup:');
+    console.log(data);
+
+    paused   = data.paused;
 
     
     var fields = ['status', 'paused', 'timeleft', 'speed', 'sizeleft', 'paused_jobs'];
     
     $.each(fields, function(i, field) {
-        var value = getPref(field);
+        var value = data[field];
         $('#sab-' + field).html(value);
     });
     
-    var status = getPref('status');
+    var status = data.status;
     $('#sab-status').addClass(status);
     
-    var data = {
+    var slot_data = {
         'playImg':chrome.extension.getURL('images/control_play.png'),
         'pauseImg':chrome.extension.getURL('images/control_pause.png'),
         'deleteImg':chrome.extension.getURL('images/messagebox_critical.png')
     };
-    
+
+    console.log(data.slots);
+
     // Grab a list of jobs (array of slot objects from the json API)
-    var jobs = getPref('queue');
+    var jobs = data.slots;
     $.each(jobs, function(i, slot) {
-        data['slot'] = slot;
-        $('#template').jqote(data).appendTo($('#sab-queue'));
+        slot_data.slot = slot;
+        $('#template').jqote(slot_data).appendTo($('#sab-queue'));
     });
     
     

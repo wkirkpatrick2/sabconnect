@@ -20,6 +20,8 @@ hr {
 
 #daemons li{cursor:pointer;}
 
+#toolbar img {cursor:pointer; border:1px solid #aaa ; -webkit-border-radius: 6px ; padding:3px; background:#ddd;}
+
 #sabInfo { 
     color: black;
     font-size: 11px;
@@ -136,9 +138,15 @@ div.filename {
     overflow: auto;
 }
 
+li {
+    border:1px solid #f0f0f0;
+    -webkit-border-radius: 6px;
+    -webkit-box-shadow: 3px 3px 3px #555;
+}
 li.highlight {
     background-color: #eee;
     border: 1px solid #ccc !important;
+    -webkit-border-radius: 6px;
 }
 
 #graph-inner {
