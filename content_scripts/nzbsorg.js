@@ -14,23 +14,32 @@ function addToSABnzbdFromNZBORG() {
     $(this).find('img').attr("src", img);
     
     // Find the newzbin id from the href
-    var url = 'http://nzbs.org/'
+    var url = 'http://nzbs.org/';
     var nzburl = url.concat($(this).attr('href'));
     // Add the authentication to the link about to be fetched
     nzburl += '&i=' + user;
     nzburl += '&h=' + hash;
-    var addLink = this;
-    addToSABnzbd(addLink, nzburl, "addurl");
+    //var addLink = this;
+    data = {};
+    data.opts = {};
+    data.opts.name = nzburl;
+    fetch(data);
+    //addToSABnzbd(addLink, nzburl, "addurl");
     return false;
 
 }
 
+var imgsab = chrome.extension.getURL('/images/sab2_16.png');
+var imgnzb = chrome.extension.getURL('/images/nzb.png');
+
 // Loop through each download link and prepend a link+img to add to sabnzbd
 $('.dlnzb').each(function() {
-    var img = chrome.extension.getURL('/images/sab2_16.png');
     var href = $(this).attr('href');
-    var link = '<a class="addSABnzbd" href="' + href + '"><img src="' + img + '" /></a> ';
-    $(this).before(link);
+    var slink = '<a class="addSABnzbd" href="' + href + '"><img src="' + imgsab + '" /></a> ';
+    var dlink = '<a class="getnzb" href="' + href + '"><img src="' + imgnzb + '" /></a> ';
+    $(this).closest('td').hide();
+    $(this).closest("tr").find("input").before(slink).before(dlink);
+    
     $('.addSABnzbd').click(addToSABnzbdFromNZBORG);
     
 });

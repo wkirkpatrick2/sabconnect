@@ -138,15 +138,16 @@ div.filename {
     overflow: auto;
 }
 
-li {
+#sab-queue li {
     border:1px solid #f0f0f0;
     -webkit-border-radius: 6px;
-    -webkit-box-shadow: 3px 3px 3px #555;
+    -webkit-box-shadow: 3px 3px 3px #aaa;
 }
-li.highlight {
+#sab-queue li.highlight {
     background-color: #eee;
     border: 1px solid #ccc !important;
     -webkit-border-radius: 6px;
+    -webkit-box-shadow: 3px 3px 3px #888;
 }
 
 #graph-inner {
