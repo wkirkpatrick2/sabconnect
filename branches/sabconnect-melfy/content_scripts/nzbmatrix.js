@@ -10,19 +10,12 @@ function findNZBId(elem) {
 
 function addToSABnzbdFromNZBMatrix() {
 
-    if(!gConfig.enable_nzbmatrix) {
-        // If disabled, skip the dl
-        return true;
-    }
-
     // Find the newzbin id from the href
     var nzbid = findNZBId(this);
     if(nzbid) {
         // Set the image to an in-progress image
-        var img = chrome.extension.getURL('images/sab2_16_fetching.png');
-        $(this).find('img').attr("src", img);
+        $(this).find('img').attr("src", imgload);
         var addLink = this;
-        
         addToSABnzbd(addLink, nzbid, "addurl");
     }
 
@@ -31,17 +24,37 @@ function addToSABnzbdFromNZBMatrix() {
 
 }
 
-$('img[title="Download NZB"]').each(function() {
-    // Change the title to "Send to SABnzbd"
-    $(this).attr("title", "Send to SABnzbd");
-    
-    // Change the nzb download image
-    var img = chrome.extension.getURL('images/sab2_16.png');
-    $(this).attr("src", img);
+var replaceIcon=false;
+var imgsab  = chrome.extension.getURL('images/sab2_16.png');
+var imgnzb  = chrome.extension.getURL('images/nzb.png');
+var imgload = chrome.extension.getURL('images/load-arrows.gif'); 
 
-    // Change the on click handler to send to sabnzbd
-    // this is the <img>, parent is the <a>
-    $(this).parent().click(addToSABnzbdFromNZBMatrix);
-    
-});
+function loader(){
+    $('img[title="Download NZB"]').each(function() {
+        if (replaceIcon){
+            $(this).addClass('send2sab')
+                .attr("title", "Send to SABnzbd+")
+                .attr("src", imgsab)
+                .parent().attr('href','javascript:return(false);');
 
+        }else{
+            $(this).attr("src", imgnzb).attr("title","Download NZB!")
+                .parent()
+                .prepend('<a class="send2sab" href="javascript:return(false);" ><img title="Send to SABnzbd+" src="'+imgsab+'" /></a>');
+        }
+    });
+}
+
+loader();
+
+console.log(gConfig);
+
+
+
+$('.send2sab').live('click',addToSABnzbdFromNZBMatrix);
+
+document.body.addEventListener('DOMNodeInserted', function(event){
+    if (event.srcElement != undefined && event.srcElement.innerHTML != undefined && event.srcElement.innerHTML.match('<tbody>')){
+        loader();
+    }
+}, false);

@@ -1,6 +1,6 @@
 {
     "name": "SABconnect",
-    "version": "1.0.2",
+    "version": "2.3.7",
     "description": "SABnzbd extension for Google Chrome.",
     "background_page": "background.html",
     "options_page": "settings.html",
@@ -14,47 +14,30 @@
     },
     "content_scripts": [
         {
-            "matches": [
-                "http://*.newzbin.com/*",
-                "https://*.newzbin.com/*",
-                "http://*.newzxxx.com/*",
-                "https://*.newzxxx.com/*"
-            ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/newzbin.js"],
+            "matches": ["http://*.newzbin.com/*","https://*.newzbin.com/*","http://*.newzxxx.com/*","https://*.newzxxx.com/*"],
+            "js": ["js/jquery-combined.js", "js/common.js", "js/sabconnect.js", "content_scripts/newzbin.js"],
             "run_at": "document_end"
         },
         {
-            "matches": [
-                "http://*.tvnzb.com/",
-                "http://*.tvnzb.com/*",
-                "https://*.tvnzb.com/",
-                "https://*.tvnzb.com/*"
-            ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/tvnzb.js"],
+            "matches": ["http://*.tvnzb.com/","http://*.tvnzb.com/*","https://*.tvnzb.com/","https://*.tvnzb.com/*"],
+            "js": ["js/jquery-combined.js", "js/common.js", "js/sabconnect.js", "content_scripts/tvnzb.js"],
             "run_at": "document_end"
         },
         {
-            "matches": [
-                "http://*.nzbmatrix.com/",
-                "http://*.nzbmatrix.com/*",
-                "https://*.nzbmatrix.com/",
-                "https://*.nzbmatrix.com/*",
-                "http://*.nzbxxx.com/",
-                "http://*.nzbxxx.com/*",
-                "https://*.nzbxxx.com/",
-                "https://*.nzbxxx.com/*"
-            ],
-            "js": ["jquery-1.3.2.min.js", "common.js", "content_scripts/nzbmatrix.js"],
+            "matches": ["http://*.nzbmatrix.com/","http://*.nzbmatrix.com/*","https://*.nzbmatrix.com/","https://*.nzbmatrix.com/*",
+                        "http://*.nzbxxx.com/","http://*.nzbxxx.com/*","https://*.nzbxxx.com/","https://*.nzbxxx.com/*"],
+            "js": ["js/jquery-combined.js", "js/common.js", "js/sabconnect.js", "content_scripts/nzbmatrix.js"],
             "run_at": "document_end"
         },
         {
-            "js": [ "jquery-1.3.2.min.js", "common.js", "content_scripts/nzbsorg.js" ],
-            "matches": [ 
-                "http://*.nzbs.org/",
-                "https://*.nzbs.org/", 
-                "http://*.nzbs.org/*", 
-                "https://*.nzbs.org/*" 
-            ],
+            "js": [ "js/jquery-combined.js", "js/common.js", "js/sabconnect.js", "content_scripts/nzbsorg.js" ],
+            "matches": ["http://*.nzbs.org/","https://*.nzbs.org/", "http://*.nzbs.org/*", "https://*.nzbs.org/*" ],
+            "run_at": "document_end"
+        },
+        {
+            "js": [ "js/jquery-combined.js", "js/common.js", "js/sabconnect.js", "content_scripts/nzbindex.js" ],
+            "css": ["site-css/nzbindex.css"],
+            "matches": ["http://*.nzbindex.com/*","https://*.nzbindex.com/*"],
             "run_at": "document_end"
         }
     ],

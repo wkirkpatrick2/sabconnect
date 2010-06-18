@@ -1,79 +1,110 @@
 
+
 var SABConnect = {
-  daemon_url:function(daemon){
-      if (!daemon.apikey === undefined){
-        return checkEndSlash(daemon.url) + 'api?apikey='+daemon.apikey;
-      }else{
-        return checkEndSlash(daemon.url) + 'api';
-      }
+    daemon_api:function(daemon){
+        if (!daemon.apikey === undefined){
+            return checkEndSlash(daemon.url) + 'api?apikey='+daemon.apikey;
+        }else{
+            return checkEndSlash(daemon.url) + 'api';
+        }
     },
 
-  info:function(data){
-      var daemon  = data.daemon;
-      var opts    = data.opts;
-      var success = data.success;
-      var error   = data.error;
-
-      if (!(typeof success == 'function')){
-        success = function(){};
-      }
-
-      if (!(typeof error == 'function')){
-        error = function(){};
-      }
-
-      
-      if (opts === undefined){opts = {};}
-
-      var url = SABConnect.daemon_url(daemon);
-      opts.apikey = daemon.apikey;
-      opts.mode   = 'queue';
-      opts.output = 'json';
-
-      $.ajax({
-        type: "GET",
-        url: url ,
-        data: opts ,
-        success: function(data){
-          var isError = false;
-          var errMsg  = '';
-          if (opts.output == 'json'){
-            data = JSON.parse(data);
-            //console.log( 'success?:' + data.error );
-                          
-            if (! (data.error === undefined)){
-              errMsg = data.error;
-              isError = true;
-            }
-          }else{
-            if (data.startsWith("error:")){
-              isError = true;
-            }
-          }
-          if (isError){
-            error(errMsg);
-          }else{
-            success(data);
-          }
-        },
-        error: error
-      });
+    daemon_url:function(daemon){
+        return checkEndSlash(daemon.url);
     },
 
-  queue_json:function(data){
-      if (data.opts === undefined){data.opts = {};}
-      data.opts.mode   = 'queue';
-      data.opts.output = 'json';
-      this.info(data);
-  },
+    info:function(data){
+        var daemon  = data.daemon;
+        var opts    = data.opts;
+        var success = data.success;
+        var error   = data.error;
 
-  queue_xml:function(data){
+        if (!(typeof success == 'function')){
+            success = function(){};
+        }
+
+        if (!(typeof error == 'function')){
+            error = function(){};
+        }
+
+        if (daemon === undefined){daemon = active_daemon;}
+
+        if (opts === undefined){opts = {};}
+
+        var url = this.daemon_api(daemon);
+        opts.apikey = daemon.apikey;
+
+        if (opts.mode === undefined)    {opts.mode   = 'queue';}
+        if (opts.output === undefined)  {opts.output = 'json';}
+
+        $.ajax({
+            type: "GET",
+            url: url ,
+            data: opts ,
+            success: function(data){
+                var isError = false;
+                var errMsg  = '';
+                if (opts.output == 'json'){
+                    data = JSON.parse(data);
+                    //console.log( 'success?:' + data.error );
+
+                if (! (data.error === undefined)){
+                    errMsg = data.error;
+                    isError = true;
+                }
+                }else{
+                    if (data.startsWith("error:")){
+                        isError = true;
+                    }
+                }
+                if (isError){
+                    error(errMsg);
+                }else{
+                    success(data);
+                }
+            },
+            error: error
+        });
+    },
+
+    fetch:function(data){
+        if (data.opts === undefined){data.opts = {};}
+        var url = this.daemon_api(data.daemon);
+
+        data.opts.mode   = 'queue';
+        data.opts.output = 'json';
+        this.info(data);
+    },
+
+    addurl:function(data){
       if (data.opts === undefined){data.opts = {};}
-      data.opts.mode   = 'queue';
-      data.opts.output = 'xml';
-      this.info(data);
-  }
+        data.opts.mode = 'addurl';
+        this.info(data);
+    },
+
+    queue_json:function(data){
+        if (data.opts === undefined){data.opts = {};}
+        data.opts.mode   = 'queue';
+        data.opts.output = 'json';
+        this.info(data);
+    },
+
+    queue_xml:function(data){
+        if (data.opts === undefined){data.opts = {};}
+        data.opts.mode   = 'queue';
+        data.opts.output = 'xml';
+        this.info(data);
+    }
 };
+
+
+
+
+
+
+
+
+
 
 function checkEndSlash(input) {
     if (input.charAt(input.length-1) == '/') {
@@ -85,77 +116,14 @@ function checkEndSlash(input) {
 }
 
 
-/*
-
-            // Cache the latest update (probably not needed)
-            //gSabInfo = data;
-
-            if(data.queue.speed) {
-                // Convert to bytes
-                var bytesPerSec = data.queue.kbpersec*1024;
-                //var speed = fileSizes(bytesPerSec, 0) + '/s';
-                var speed = data.queue.speed + 'B/s';
-            } else {
-                var speed = '-';
-            }
-            setPref('speed', speed);
-
-            // Do not run this on a quickUpdate (unscheduled refresh)
-            if(!quickUpdate) {
-                var speedlog = getPref('speedlog');
-
-                if(speedlog.length >= 10) {
-                    // Only allow 10 values, if at our limit, remove the first value (oldest)
-                    speedlog.shift()
-                }
-
-                speedlog.push(data.queue.kbpersec);
-                setPref('speedlog', speedlog);
-            }
-
-
-
-            if(data.queue.mbleft && data.queue.mbleft > 0) {
-                // Convert to bytes
-                var bytesLeft = data.queue.mbleft*1048576;
-                var queueSize = fileSizes(bytesLeft);
-            } else {
-                var queueSize = '';
-            }
-            setPref('sizeleft', queueSize);
-
-            setPref('queue', data.queue.slots);
-
-            setPref('status', data.queue.status);
-            setPref('paused', data.queue.paused);
-
-            // Update the badge
-            var badge = {};
-            // Set the text on the object to be the number of items in the queue
-            // +'' = converts the int to a string.
-            badge.text = data.queue.noofslots+'';
-            chrome.browserAction.setBadgeText(badge);
-
-
-            // Update the background based on if we are downloading
-            if(data.queue.kbpersec && data.queue.kbpersec > 1) {
-                badgeColor = {}
-                badgeColor.color = new Array(0, 213, 7, 100);
-                chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-            } else {
-                // Not downloading
-                badgeColor = {}
-                badgeColor.color = new Array(255, 0, 0, 100);
-                chrome.browserAction.setBadgeBackgroundColor(badgeColor)
-            }
-
-
- */
-
 
 
 
 function addToSABnzbd(addLink, nzb, mode) {
+    if (active_daemon == undefined){
+        alert('active_daemon == undefined');
+        return false;
+    }
 
     
 
